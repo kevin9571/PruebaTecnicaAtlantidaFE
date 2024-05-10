@@ -1,0 +1,41 @@
+﻿@model IEnumerable<PruebaAtlantidaFE.Models.MovimientoCLS>
+
+@{
+    ViewBag.Title = "VerHistorial";
+}
+
+<h2>Historial de compras</h2>
+
+<table class="table table-sm mt-4">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Fecha)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Descripción)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Monto)
+        </th>
+    </tr>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Fecha)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Descripción)
+        </td>
+        <td>
+            @if (item.IdTipoMovimiento == 1) { 
+                <b class="text-danger">-$@Html.DisplayFor(modelItem => item.Monto)</b>
+            }else { 
+                <b class="text-success">$@Html.DisplayFor(modelItem => item.Monto)</b>
+            }
+        </td>
+    </tr>
+}
+
+</table>

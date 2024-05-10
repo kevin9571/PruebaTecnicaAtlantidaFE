@@ -1,0 +1,222 @@
+﻿@model PruebaAtlantidaFE.Models.TarjetaCreditoCLS
+
+@{
+    ViewBag.Title = "VerEstadoCuenta";
+}
+
+<div class="row">
+    <div class="col-8"></div>
+    <div class="col-2">
+        <a class="btn btn-success" id="DescargarExcel" href="https://localhost:44352/api/Movimiento/DescargarCompras/@Html.DisplayFor(model => model.Id)">
+            Descargar Excel <i style="color: white;" class="fa-regular fa-file-pdf"></i>
+        </a>
+    </div>
+    <div class="col-2">
+        <button class="btn btn-danger" id="DescargarPDF" onclick="DescargarPDF()">
+            Descargar PDF <i style="color: white;" class="fa-regular fa-file-pdf"></i>
+        </button>
+    </div>
+</div>
+
+
+<h2>Estado de cuenta</h2>
+<hr />
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-4">
+            <b>@Html.DisplayNameFor(model => model.Nombre):</b> @Html.DisplayFor(model => model.Nombre)
+        </div>
+        <div class="col-4">
+            <b>@Html.DisplayNameFor(model => model.Numero):</b> @Html.DisplayFor(model => model.Numero)
+        </div>
+    </div>
+
+    <div class="row mt-1">
+        <div class="col-4">
+            <b>@Html.DisplayNameFor(model => model.SaldoActual):</b> @Html.DisplayFor(model => model.SaldoActual)
+        </div>
+        <div class="col-4">
+            <b>@Html.DisplayNameFor(model => model.Limite):</b> @Html.DisplayFor(model => model.Limite)
+        </div>
+        <div class="col-4">
+            <b>@Html.DisplayNameFor(model => model.SaldoDisponible):</b> @Html.DisplayFor(model => model.SaldoDisponible)
+        </div>
+    </div>
+
+    <hr />
+
+    <h4 style="color: #ED1C27;">Compras realizadas</h4>
+
+    <table id="Movimientos" class="table table-striped mt-3 mb-3">
+        <thead>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Monto</th>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-4">
+            <b>Monto total mes anterior: </b><label id="MontoAnterior"></label>
+        </div>
+
+        <div class="col-4"></div>
+
+        <div class="col-4">
+            <b>Monto total mes actual: </b><label id="MontoActual"></label>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <b>Interes modificable: </b><label>$@ViewBag.InteresBonificable</label>
+        </div>
+
+        <div class="col-4">
+            <b>Cuota minima: </b><label>$@ViewBag.CuotaMinima</label>
+        </div>
+
+        <div class="col-4">
+            <b>Monto Total: </b><label>$@Html.DisplayFor(model => model.SaldoActual)</label>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-8">
+
+        </div>
+
+        <div class="col-4">
+            <b>Monto Total con Interes: </b><label>$@ViewBag.MontoTotalConIntereses</label>
+        </div>
+    </div>
+
+    @Html.ActionLink("Regresar", "Index", "TarjetaCredito", null, new { @Id = "BtnRegresar" })
+
+</div>
+
+<script>
+
+    function PedirValores() {
+
+        let url = "https://localhost:44352/api/Movimiento/Compras/" +  @Html.DisplayFor(model => model.Id);
+
+        //Pedir los movimientos de este mes
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#Movimientos tbody').empty();
+
+                data.forEach(function (item) {
+                    var row = `<tr>
+                                <td>${formatarFechaISOaDDMMYYYY(item.fecha)}</td>
+                                <td>${item.descripción}</td>
+                                <td>${item.monto}</td>
+                            </tr>`;
+                    $('#Movimientos tbody').append(row);
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener datos:', error);
+            }
+        });
+
+        //Pedir Monto Actual
+        url = "https://localhost:44352/api/Movimiento/MontoTotalActual/" +  @Html.DisplayFor(model => model.Id);
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log(data);
+
+                $("#MontoActual").append(`$${data}`);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener datos:', error);
+            }
+        });
+
+        //Pedir Monto anterior
+        url = "https://localhost:44352/api/Movimiento/MontoTotalAnterior/" +  @Html.DisplayFor(model => model.Id);
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log(data);
+
+                $("#MontoAnterior").append(`$${data}`);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error al obtener datos:', error);
+            }
+        });
+    }
+
+    function formatarFechaISOaDDMMYYYY(fechaISO) {
+        var fecha = new Date(fechaISO);
+        var dia = fecha.getDate();
+        var mes = fecha.getMonth() + 1;
+        var año = fecha.getFullYear();
+
+        // Agregar ceros a la izquierda si es necesario
+        dia = dia < 10 ? '0' + dia : dia;
+        mes = mes < 10 ? '0' + mes : mes;
+
+        return dia + '-' + mes + '-' + año;
+    }
+
+    function HoyDDMMYYYY() {
+        var fecha = new Date();
+
+        var dia = fecha.getDate();
+        var mes = fecha.getMonth() + 1;
+        var anio = fecha.getFullYear();
+
+        return (dia < 10 ? '0' : '') + dia + "" + (mes < 10 ? '0' : '') + mes + "" + anio;
+    }
+
+    function DescargarPDF() {
+
+        $('footer').hide();
+        $("#BtnRegresar").hide();
+        $("#DescargarPDF").hide();
+        $("#DescargarExcel").hide();
+
+        html2canvas(document.body).then(canvas => {
+            // Crear una imagen desde el canvas
+            const imgData = canvas.toDataURL('image/png');
+
+            // Inicializar jsPDF
+            const pdf = new jspdf.jsPDF();
+
+            // Calcular la proporción para escalar la imagen al tamaño del PDF
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            // Añadir la imagen al documento PDF
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`@Html.DisplayFor(model => model.Numero) - ${HoyDDMMYYYY()}.pdf`);
+        });
+
+        $('footer').show();
+        $("#BtnRegresar").show();
+        $("#DescargarPDF").show();
+        $("#DescargarExcel").show();
+    }
+
+
+    //
+    PedirValores();
+
+</script>
